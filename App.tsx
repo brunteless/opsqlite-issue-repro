@@ -21,21 +21,15 @@ class Database {
   private readonly db: DB;
 
   constructor() {
-    console.log('Initializing database...');
     this.db = open({ name: 'test.db' });
     const createQuery = `
-        CREATE TABLE IF NOT EXISTS test (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          groupId TEXT NOT NULL,
-          name TEXT NOT NULL
-        )
-      `;
-    try {
-      this.db.executeSync(createQuery);
-      console.log('Database initialized successfully');
-    } catch (error) {
-      console.error('Database initialization failed:', error);
-    }
+      CREATE TABLE IF NOT EXISTS test (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        groupId TEXT NOT NULL,
+        name TEXT NOT NULL
+      )
+    `;
+    this.db.executeSync(createQuery);
   }
 
   async insertRandomItems() {
@@ -55,39 +49,27 @@ class Database {
 
     const query = `INSERT INTO test (groupId, name) VALUES (?, ?)`;
 
-    try {
-      await this.db.transaction(async tx => {
-        for (const batch of batches) {
-          const id = this.generateId();
+    await this.db.transaction(async tx => {
+      for (const batch of batches) {
+        const id = this.generateId();
 
-          for (const item of batch) {
-            await tx.execute(query, [id, item.name]);
-          }
+        for (const item of batch) {
+          await tx.execute(query, [id, item.name]);
         }
-      });
-      console.log('Transaction completed successfully');
-    } catch (error) {
-      console.error('Transaction failed:', error);
-    }
+      }
+    });
   }
 
   async clearAllItems() {
-    console.log('clearAllItems called');
     const query = `DELETE FROM test`;
-    try {
-      await this.db!.transaction(async tx => {
-        await tx.execute(query);
-      });
-      console.log('Clear transaction completed successfully');
-    } catch (error) {
-      console.error('Clear transaction failed:', error);
-    }
+    await this.db!.transaction(async tx => {
+      await tx.execute(query);
+    });
   }
 
   public getGroupCountReactive(callback: (num: number) => void) {
     const query = `SELECT COUNT(DISTINCT groupId) as count FROM test;`;
 
-    console.log('Setting up group count reactive query');
     return this.db.reactiveExecute({
       query,
       arguments: [],
@@ -97,7 +79,6 @@ class Database {
         },
       ],
       callback: res => {
-        console.log('Group count callback:', res);
         callback(res.rows[0]?.count ?? 0);
       },
     });
@@ -106,7 +87,6 @@ class Database {
   public getItemCountReactive(callback: (num: number) => void) {
     const query = `SELECT COUNT(*) as count FROM test;`;
 
-    console.log('Setting up item count reactive query');
     return this.db.reactiveExecute({
       query,
       arguments: [],
@@ -116,7 +96,6 @@ class Database {
         },
       ],
       callback: res => {
-        console.log('Item count callback:', res);
         callback(res.rows[0]?.count ?? 0);
       },
     });
