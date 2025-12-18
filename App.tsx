@@ -62,7 +62,14 @@ class Database {
 
   async clearAllItems() {
     const query = `DELETE FROM test`;
-    await this.db!.transaction(async tx => {
+    await this.db.transaction(async tx => {
+      await tx.execute(query);
+    });
+  }
+
+  async removeSomeItems() {
+    const query = `DELETE FROM test WHERE id IN (SELECT id FROM test LIMIT 5)`;
+    await this.db.transaction(async tx => {
       await tx.execute(query);
     });
   }
@@ -145,6 +152,10 @@ function AppContent() {
         title={'Insert random items'}
       />
       <Button onPress={() => database.clearAllItems()} title={'Reset'} />
+      <Button
+        onPress={() => database.removeSomeItems()}
+        title={'Remove 5 items'}
+      />
     </View>
   );
 }
